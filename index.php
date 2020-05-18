@@ -18,21 +18,24 @@ if (isset($_SESSION['cart'])) {
 }
 $cartValue = 0;
 
-// Kolla om användaren har tryckt på...
-if (isset($_POST)) {
-
-    if (isset($_POST['emptyCart'])) {
-        $cart = [];
-        $_SESSION['cart'] = $cart;
-    } else {
-        // Hämta index-värdet.
-        foreach ($_POST as $key => $value) {
-            // Lägg produkt i varukorgen
+// Lägg till i varukorgen
+if (isset($_POST['addToCart'])) {
+    var_dump($_POST['amount']);
+    foreach ($_POST['amount'] as $key => $value) {
+        // Lägg produkt i varukorgen så många gånger som det krävs.
+        for ($i = 0; $i < $value; $i++) {
             $cart[] = $products[$key];
-            $_SESSION['cart'] = $cart;
         }
     }
+    $_SESSION['cart'] = $cart;
 }
+
+// Töm varukorgen
+if (isset($_POST['emptyCart'])) {
+    $cart = [];
+    $_SESSION['cart'] = $cart;
+}
+
 
 ?>
 
@@ -54,11 +57,12 @@ if (isset($_POST)) {
                 // Lista alla produkter
                 foreach ($products as $key => $product) {
                     echo "<li>" . $product['title'] . " " . $product['price'];
-                    echo "<input type='submit' value='Lägg till i varukorg' name='$key'>";
+                    echo "<input type='number' value='0' name='amount[]'>";
                     echo "</li>";
                 }
                 ?>
             </ul>
+            <input type="submit" name="addToCart" value="Lägg i varukorgen">
         </form>
     </section>
     <section>
