@@ -27,12 +27,22 @@ $cartValue = 0;
 // Lägg till i varukorgen
 if (isset($_POST['addToCart'])) {
     foreach ($_POST['amount'] as $key => $value) {
+        // Amount är antingen så många exemplar det finns av en produkt... 
+        $amount = $products[$key]['lagersaldo'];
+
+        // ...eller så många som användaren vill ha.
+        if ($products[$key]['lagersaldo'] - $value > 0) {
+            $amount = $value;
+        }
         // Lägg produkt i varukorgen så många gånger som det krävs.
-        for ($i = 0; $i < $value; $i++) {
+        // Uppdatera också lagersaldot.
+        for ($i = 0; $i < $amount; $i++) {
             $cart[] = $products[$key];
+            $products[$key]['lagersaldo']--;
         }
     }
     $_SESSION['cart'] = $cart;
+    $_SESSION['products'] = $products;
 }
 
 // Ta bort enskild artikel ur varukorgen
@@ -40,15 +50,33 @@ if (isset($_GET['index'])) {
     // Tvätta och rengör.
     $index = filter_var($_GET['index'], FILTER_SANITIZE_NUMBER_INT);
 
-    // Splice:a ut rätt vara ur varukorgen
-    array_splice($cart, $index, 1);
+    // Splice:a ut rätt vara ur varukorgen - array_splice returnerar en array, 
+    // vi vill ha första elementet, därav nollan.
+    $removedProduct = array_splice($cart, $index, 1)[0];
+
+    // Kolla titeln, jämför med title i $products.
+    $index = array_search($removedProduct['title'], array_column($products, 'title'));
+    // Använd det index-värdet och öka lagerstatus med 1.
+    $products[$index]['lagersaldo']++;
+
     $_SESSION['cart'] = $cart;
+    $_SESSION['products'] = $products;
 }
 
 // Töm varukorgen
 if (isset($_POST['emptyCart'])) {
+
+    // I och med egenskapen lagersaldo i products, bör vi föra tillbaka produkterna när vi tömmer varukorgen.
+    foreach ($cart as $product) {
+        // Kolla titeln, jämför med title i $products.
+        $index = array_search($product['title'], array_column($products, 'title'));
+        // Använd det index-värdet och öka lagerstatus med 1.
+        $products[$index]['lagersaldo']++;
+    }
+
     $cart = [];
     $_SESSION['cart'] = $cart;
+    $_SESSION['products'] = $products;
 }
 
 
@@ -71,9 +99,13 @@ if (isset($_POST['emptyCart'])) {
                 <?php
                 // Lista alla produkter
                 foreach ($products as $key => $product) {
-                    echo "<li>" . $product['title'] . " " . $product['price'];
-                    echo "<input type='number' value='' name='amount[]'>";
-                    echo "</li>";
+                    if ($product['lagersaldo'] > 0) {
+                        echo "<li>" . $product['title'] . " " . $product['price'];
+                        echo "<input type='number' value='0' name='amount[]'>";
+                        echo "</li>";
+                    } else {
+                        echo "<li>" . $product['title'] . " är tyvärr slut i lager.";
+                    }
                 }
                 ?>
             </ul>
