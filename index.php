@@ -20,13 +20,22 @@ $cartValue = 0;
 
 // Lägg till i varukorgen
 if (isset($_POST['addToCart'])) {
-    var_dump($_POST['amount']);
     foreach ($_POST['amount'] as $key => $value) {
         // Lägg produkt i varukorgen så många gånger som det krävs.
         for ($i = 0; $i < $value; $i++) {
             $cart[] = $products[$key];
         }
     }
+    $_SESSION['cart'] = $cart;
+}
+
+// Ta bort enskild artikel ur varukorgen
+if (isset($_GET['index'])) {
+    // Tvätta och rengör.
+    $index = filter_var($_GET['index'], FILTER_SANITIZE_NUMBER_INT);
+
+    // Splice:a ut rätt vara ur varukorgen
+    array_splice($cart, $index, 1);
     $_SESSION['cart'] = $cart;
 }
 
@@ -69,8 +78,9 @@ if (isset($_POST['emptyCart'])) {
         <h1>Varukorg</h1>
         <ul>
             <?php
-            foreach ($cart as $product) {
+            foreach ($cart as $key => $product) {
                 echo "<li>" . $product['title'] . " " . $product['price'];
+                echo "<a href='index.php?index=$key'> x </a></li>";
                 // Räkna ut värdet på varukorgen
                 $cartValue += $product['price'];
             }
