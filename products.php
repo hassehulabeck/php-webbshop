@@ -4,17 +4,21 @@ $products = [
     [
         'title' => 'Jane Eyre',
         'format' => 'pocket',
-        'price' => 49
+        'price' => 49,
+        'lagersaldo' => 12
     ],
     [
         'title' => 'Semestra i Yorkshire',
         'format' => 'inbunden',
-        'price' => 199
+        'price' => 199,
+        'lagersaldo' => 1
     ],
     [
         'title' => 'Stolthet & Fördom',
         'format' => 'pocket',
-        'price' => 59
+        'price' => 59,
+        'lagersaldo' => 4
+
     ]
 ];
 

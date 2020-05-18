@@ -5,7 +5,13 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-include 'products.php';
+// Om $_SESSION['products'] är "satt", placera det i $cart.
+if (isset($_SESSION['products'])) {
+    $products = $_SESSION['products'];
+} else {
+    // Definiera $cart som en tom varukorg/array.
+    include 'products.php';
+}
 
 // Variabler
 
@@ -66,7 +72,7 @@ if (isset($_POST['emptyCart'])) {
                 // Lista alla produkter
                 foreach ($products as $key => $product) {
                     echo "<li>" . $product['title'] . " " . $product['price'];
-                    echo "<input type='number' value='0' name='amount[]'>";
+                    echo "<input type='number' value='' name='amount[]'>";
                     echo "</li>";
                 }
                 ?>
@@ -90,7 +96,7 @@ if (isset($_POST['emptyCart'])) {
         echo "Total kostnad: " . $cartValue;
         ?>
         <form action="index.php" method="post">
-            <input type="submit" value="töm varukorgen" name="emptyCart">
+            <input type="submit" value="Töm varukorgen" name="emptyCart">
         </form>
     </section>
 </body>
