@@ -21,11 +21,16 @@ $cartValue = 0;
 // Kolla om användaren har tryckt på...
 if (isset($_POST)) {
 
-    // Hämta index-värdet.
-    foreach ($_POST as $key => $value) {
-        // Lägg produkt i varukorgen
-        $cart[] = $products[$key];
+    if (isset($_POST['emptyCart'])) {
+        $cart = [];
         $_SESSION['cart'] = $cart;
+    } else {
+        // Hämta index-värdet.
+        foreach ($_POST as $key => $value) {
+            // Lägg produkt i varukorgen
+            $cart[] = $products[$key];
+            $_SESSION['cart'] = $cart;
+        }
     }
 }
 
@@ -70,6 +75,9 @@ if (isset($_POST)) {
         <?php
         echo "Total kostnad: " . $cartValue;
         ?>
+        <form action="index.php" method="post">
+            <input type="submit" value="töm varukorgen" name="emptyCart">
+        </form>
     </section>
 </body>
 
