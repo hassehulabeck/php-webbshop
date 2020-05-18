@@ -8,3 +8,12 @@ section {
 input[type="submit"] {
     margin: 1em 0 0 1em;
 }
+
+table td,
+table th {
+    padding: 0 1em;
+}
+
+table td:nth-child(2) {
+    text-align: right;
+}

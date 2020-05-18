@@ -15,6 +15,23 @@ if (isset($_SESSION['products'])) {
 
 // Variabler
 
+// Hämta alla värden ur egenskapen/kolumnen format.
+$categories = array_unique(array_column($products, "format"));
+
+
+// Hämta filteringsquery från URL
+if (isset($_GET['filter'])) {
+    // Tvätta och rengör.
+    $filter = filter_var($_GET['filter'], FILTER_SANITIZE_STRING);
+    $_SESSION['filter'] = $filter;
+    $filteredProducts = array_filter($products, function ($product) use ($filter) {
+        return $product['format'] == $filter;
+    });
+} else {
+    $filteredProducts = $products;
+}
+
+
 // Om cart är "satt", placera det i $cart.
 if (isset($_SESSION['cart'])) {
     $cart = $_SESSION['cart'];
@@ -94,21 +111,31 @@ if (isset($_POST['emptyCart'])) {
 <body>
     <section>
         <h1>Alla produkter</h1>
+        <h2>Filtrera</h2>
+        <?php
+        foreach ($categories as $category) {
+            echo "<a href='index.php?filter=$category' >$category</a> - ";
+        }
+        ?>
+        <a href='index.php'>Alla</a>
         <form action="index.php" method="post">
-            <ul>
-                <?php
-                // Lista alla produkter
-                foreach ($products as $key => $product) {
-                    if ($product['lagersaldo'] > 0) {
-                        echo "<li>" . $product['title'] . " " . $product['price'];
-                        echo "<input type='number' value='0' name='amount[]'>";
-                        echo "</li>";
-                    } else {
-                        echo "<li>" . $product['title'] . " är tyvärr slut i lager.";
-                    }
-                }
-                ?>
-            </ul>
+            <table>
+                <tr>
+                    <th>Title
+                    <th>Pris
+                    <th>Antal
+                        <?php
+                        // Lista alla produkter
+                        foreach ($filteredProducts as $key => $product) {
+                            if ($product['lagersaldo'] > 0) {
+                                echo "<tr><td>" . $product['title'] . "<td>" . $product['price'];
+                                echo "<td><input type='number' value='0' name='amount[]'>";
+                            } else {
+                                echo "<tr><td colspan=3>" . $product['title'] . " är tyvärr slut i lager.";
+                            }
+                        }
+                        ?>
+            </table>
             <input type="submit" name="addToCart" value="Lägg i varukorgen">
         </form>
     </section>
