@@ -1,21 +1,37 @@
 <?php
 session_start();
+//session_destroy();
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Om $_SESSION['products'] är "satt", placera det i $cart.
-if (isset($_SESSION['products'])) {
-    $products = $_SESSION['products'];
-} else {
-    include 'products.php';
+// Koppla upp till databas.
+include 'secret.php';
+$dbh = new PDO('mysql:host=localhost;dbname=webbshop', $user, $pw);
+
+$products = getProducts($dbh);
+
+function getProducts($dbh)
+{
+    $sth = $dbh->prepare("
+    SELECT 
+        products.id AS id, 
+        title, 
+        formats.format AS format, 
+        price, 
+        lagersaldo
+    FROM products 
+    JOIN formats ON formats.id = products.format
+    ");
+    $sth->execute();
+    return $sth->fetchAll();
 }
 
-function updateSession($cart, $products)
+
+function updateSession($cart)
 {
     $_SESSION['cart'] = $cart;
-    $_SESSION['products'] = $products;
 }
 
 
@@ -30,11 +46,9 @@ if (isset($_GET['filter'])) {
     // Tvätta och rengör.
     $filter = filter_var($_GET['filter'], FILTER_SANITIZE_STRING);
     $_SESSION['filter'] = $filter;
-    $filteredProducts = array_filter($products, function ($product) use ($filter) {
+    $products = array_filter($products, function ($product) use ($filter) {
         return $product['format'] == $filter;
     });
-} else {
-    $filteredProducts = $products;
 }
 
 
@@ -64,10 +78,14 @@ if (isset($_POST['addToCart'])) {
         // Uppdatera också lagersaldot.
         for ($i = 0; $i < $amount; $i++) {
             $cart[] = $products[$index];
-            $products[$index]['lagersaldo']--;
+            // $products[$index]['lagersaldo']--;
+            $sql = "UPDATE products SET lagersaldo = lagersaldo - 1 WHERE id = ?";
+            $sth = $dbh->prepare($sql);
+            $sth->execute([$id]);
         }
     }
-    updateSession($cart, $products);
+    $products = getProducts($dbh);
+    updateSession($cart);
 }
 
 // Ta bort enskild artikel ur varukorgen
@@ -84,7 +102,7 @@ if (isset($_GET['index'])) {
     // Använd det index-värdet och öka lagerstatus med 1.
     $products[$index]['lagersaldo']++;
 
-    updateSession($cart, $products);
+    updateSession($cart);
 }
 
 // Töm varukorgen
@@ -99,7 +117,7 @@ if (isset($_POST['emptyCart'])) {
     }
 
     $cart = [];
-    updateSession($cart, $products);
+    updateSession($cart);
 }
 
 
@@ -132,7 +150,7 @@ if (isset($_POST['emptyCart'])) {
                     <th>Antal
                         <?php
                         // Lista alla produkter
-                        foreach ($filteredProducts as $key => $product) {
+                        foreach ($products as $key => $product) {
                             if ($product['lagersaldo'] > 0) {
                                 echo "<tr><td>" . $product['title'] . "<td>" . $product['price'];
                                 $id = $product['id'];
