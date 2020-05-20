@@ -9,7 +9,6 @@ error_reporting(E_ALL);
 if (isset($_SESSION['products'])) {
     $products = $_SESSION['products'];
 } else {
-    // Definiera $cart som en tom varukorg/array.
     include 'products.php';
 }
 
@@ -43,19 +42,22 @@ $cartValue = 0;
 
 // Lägg till i varukorgen
 if (isset($_POST['addToCart'])) {
-    foreach ($_POST['amount'] as $key => $value) {
+    foreach ($_POST['amount'] as $id => $antal) {
+        // Hitta index för produkten med id = $id.
+        $index = array_search($id, array_column($products, 'id'));
+
         // Amount är antingen så många exemplar det finns av en produkt... 
-        $amount = $products[$key]['lagersaldo'];
+        $amount = $products[$index]['lagersaldo'];
 
         // ...eller så många som användaren vill ha.
-        if ($products[$key]['lagersaldo'] - $value > 0) {
-            $amount = $value;
+        if ($products[$index]['lagersaldo'] > $antal) {
+            $amount = $antal;
         }
         // Lägg produkt i varukorgen så många gånger som det krävs.
         // Uppdatera också lagersaldot.
         for ($i = 0; $i < $amount; $i++) {
-            $cart[] = $products[$key];
-            $products[$key]['lagersaldo']--;
+            $cart[] = $products[$index];
+            $products[$index]['lagersaldo']--;
         }
     }
     $_SESSION['cart'] = $cart;
@@ -129,7 +131,8 @@ if (isset($_POST['emptyCart'])) {
                         foreach ($filteredProducts as $key => $product) {
                             if ($product['lagersaldo'] > 0) {
                                 echo "<tr><td>" . $product['title'] . "<td>" . $product['price'];
-                                echo "<td><input type='number' value='0' name='amount[]'>";
+                                $id = $product['id'];
+                                echo "<td><input type='number' value='0' name='amount[$id]'>";
                             } else {
                                 echo "<tr><td colspan=3>" . $product['title'] . " är tyvärr slut i lager.";
                             }
