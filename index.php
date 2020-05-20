@@ -12,6 +12,13 @@ if (isset($_SESSION['products'])) {
     include 'products.php';
 }
 
+function updateSession($cart, $products)
+{
+    $_SESSION['cart'] = $cart;
+    $_SESSION['products'] = $products;
+}
+
+
 // Variabler
 
 // Hämta alla värden ur egenskapen/kolumnen format.
@@ -60,8 +67,7 @@ if (isset($_POST['addToCart'])) {
             $products[$index]['lagersaldo']--;
         }
     }
-    $_SESSION['cart'] = $cart;
-    $_SESSION['products'] = $products;
+    updateSession($cart, $products);
 }
 
 // Ta bort enskild artikel ur varukorgen
@@ -78,8 +84,7 @@ if (isset($_GET['index'])) {
     // Använd det index-värdet och öka lagerstatus med 1.
     $products[$index]['lagersaldo']++;
 
-    $_SESSION['cart'] = $cart;
-    $_SESSION['products'] = $products;
+    updateSession($cart, $products);
 }
 
 // Töm varukorgen
@@ -94,8 +99,7 @@ if (isset($_POST['emptyCart'])) {
     }
 
     $cart = [];
-    $_SESSION['cart'] = $cart;
-    $_SESSION['products'] = $products;
+    updateSession($cart, $products);
 }
 
 
