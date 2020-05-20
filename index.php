@@ -10,6 +10,7 @@ error_reporting(E_ALL);
 include 'secret.php';
 $dbh = new PDO('mysql:host=localhost;dbname=webbshop', $user, $pw);
 
+// Hämta data varje gång sidan laddas.
 $products = getProducts($dbh);
 
 function getProducts($dbh)
@@ -78,11 +79,10 @@ if (isset($_POST['addToCart'])) {
         // Uppdatera också lagersaldot.
         for ($i = 0; $i < $amount; $i++) {
             $cart[] = $products[$index];
-            // $products[$index]['lagersaldo']--;
-            $sql = "UPDATE products SET lagersaldo = lagersaldo - 1 WHERE id = ?";
-            $sth = $dbh->prepare($sql);
-            $sth->execute([$id]);
         }
+        $sql = "UPDATE products SET lagersaldo = lagersaldo - :amount WHERE id = :id";
+        $sth = $dbh->prepare($sql);
+        $sth->execute([':amount' => $amount, ':id' => $id]);
     }
     $products = getProducts($dbh);
     updateSession($cart);
@@ -97,11 +97,12 @@ if (isset($_GET['index'])) {
     // vi vill ha första elementet, därav nollan.
     $removedProduct = array_splice($cart, $index, 1)[0];
 
-    // Kolla titeln, jämför med title i $products.
-    $index = array_search($removedProduct['title'], array_column($products, 'title'));
-    // Använd det index-värdet och öka lagerstatus med 1.
-    $products[$index]['lagersaldo']++;
+    // Öka lagerstatus med 1.
+    $sql = "UPDATE products SET lagersaldo = lagersaldo + 1 WHERE id = :key";
+    $sth = $dbh->prepare($sql);
+    $sth->execute([':key' => $removedProduct['id']]);
 
+    $products = getProducts($dbh);
     updateSession($cart);
 }
 
@@ -110,12 +111,13 @@ if (isset($_POST['emptyCart'])) {
 
     // I och med egenskapen lagersaldo i products, bör vi föra tillbaka produkterna när vi tömmer varukorgen.
     foreach ($cart as $product) {
-        // Kolla titeln, jämför med title i $products.
-        $index = array_search($product['title'], array_column($products, 'title'));
-        // Använd det index-värdet och öka lagerstatus med 1.
-        $products[$index]['lagersaldo']++;
+        // Öka lagerstatus med 1.
+        $sql = "UPDATE products SET lagersaldo = lagersaldo + 1 WHERE id = :id";
+        $sth = $dbh->prepare($sql);
+        $sth->execute([':id' => $product['id']]);
     }
 
+    $products = getProducts($dbh);
     $cart = [];
     updateSession($cart);
 }
